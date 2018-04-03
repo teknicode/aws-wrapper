@@ -1,0 +1,25 @@
+{
+  "name": "teknicode/aws-wrapper",
+  "description": "Simple Wrapper for AWS SDK for PHP",
+  "version":"1.0.0",
+  "keywords": [
+    "sms","email","aws"
+  ],
+  "type": "library",
+  "license": "Mit",
+  "authors": [
+    {
+      "name": "Oliver Watts",
+      "homepage": "http://teknicode.uk"
+    }
+  ],
+  "require": {
+    "php": ">=5.5",
+    "aws/aws-sdk-php": "~3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Teknicode\\": "src/"
+    }
+  }
+}
