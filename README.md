@@ -20,6 +20,10 @@ Include the class:
 
 `require('./src/Aws.php')`
 
+or
+
+`require('./vendor/autoload.php')` if you install with composer.
+
 Create an instance:
 
 ```php
