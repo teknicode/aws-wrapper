@@ -4,6 +4,12 @@ I'm wrote this function to speed up my own workflow when using Amazon Web Servic
 
 I plan to expand it as and when I have time :)
 
+#### Install with composer
+
+https://packagist.org/packages/teknicode/aws-wrapper
+
+`composer require teknicode/aws-wrapper`
+
 #### Requirements
 
 If installed with composer dependents will also be installed. Otherwise, also install and require the AWS PHP SDK version 3+.
