@@ -2,14 +2,14 @@
 namespace Teknicode;
 
 class Aws{
-    protected $credentials,$sdk;
+    protected $credentials,$sdk,$mailer;
 
     public function __construct($credentials)
     {
         //configure credentials
         $this->credentials = $credentials;
 
-
+        //create AWS instance
         $this->sdk = new \Aws\Sdk([
             'credentials' => array(
                 'key' => $this->credentials['aws_access_key_id'],
@@ -19,6 +19,8 @@ class Aws{
             'version'  => 'latest'
         ]);
 
+        //create PHPMailer instance
+        $this->mailer = new \PHPMailer\PHPMailer\PHPMailer;
     }
 
     public function sms($number,$msg){
@@ -51,45 +53,96 @@ class Aws{
 
     }
 
-    public function email($to,$subject,$html){
+    public function email($to,$subject,$html,$attachments=null){
+
         $ses = $this->sdk->createSes();
 
-        $args = [
-            'Destination' => [
-                'ToAddresses' => [
-                    $to,
-                ],
-            ],
-            'Message' => [
-                'Body' => [
-                    'Html' => [
-                        'Charset' => 'utf-8',
-                        'Data' => $html,
-                    ],
-                    'Text' => [
-                        'Charset' => 'utf-8',
-                        'Data' => strip_tags($html),
-                    ],
-                ],
-                'Subject' => [
-                    'Charset' => 'utf-8',
-                    'Data' => $subject,
-                ],
-            ],
-            'Source' => $this->credentials['email_from']
-        ];
+        if( !empty($attachments) && gettype($attachments) == "string" ){
+            $attachments=explode(",",$attachments);
+        }
 
-        try{
-            $response = $ses->sendEmail($args);
-            return [
-                "status" => "success",
-                "message_id" => $response->get("MessageId")
+        if(!$attachments) {
+
+            $args = [
+                'Destination' => [
+                    'ToAddresses' => [
+                        $to,
+                    ],
+                ],
+                'Message' => [
+                    'Body' => [
+                        'Html' => [
+                            'Charset' => 'utf-8',
+                            'Data' => $html,
+                        ],
+                        'Text' => [
+                            'Charset' => 'utf-8',
+                            'Data' => strip_tags($html),
+                        ],
+                    ],
+                    'Subject' => [
+                        'Charset' => 'utf-8',
+                        'Data' => $subject,
+                    ],
+                ],
+                'Source' => $this->credentials['email_from']
             ];
-        } catch (\Aws\Ses\Exception\SesException $e){
-            return [
-                "status" => "error",
-                "error" => $e->getAwsErrorMessage()
-            ];
+
+            try {
+                $response = $ses->sendEmail($args);
+                return [
+                    "status" => "success",
+                    "message_id" => $response->get("MessageId")
+                ];
+            } catch (\Aws\Ses\Exception\SesException $e) {
+                return [
+                    "status" => "error",
+                    "error" => $e->getAwsErrorMessage()
+                ];
+            }
+            
+        }else{
+
+            $this->mailer->setFrom($this->credentials['email_from']);
+            $this->mailer->addAddress($to);
+            $this->mailer->Subject = $subject;
+            $this->mailer->Body = $html;
+            $this->mailer->AltBody = strip_tags($html);
+            if( !empty($attachments) && count($attachments) > 0 ) {
+                foreach($attachments as $attachment){
+                    $this->mailer->addAttachment($attachment);
+                }
+            }
+
+            if (!$this->mailer->preSend()) {
+                return [
+                    "status" => "error",
+                    "error" => $this->mailer->ErrorInfo
+                ];
+            } else {
+                $message = $this->mailer->getSentMIMEMessage();
+
+                try {
+                    $send = $ses->sendRawEmail([
+                        'RawMessage' => [
+                            'Data' => $message
+                        ]
+                    ]);
+                    return [
+                        "status" => "success",
+                        "message_id" => $send->get('MessageId')
+                    ];
+                } catch (\Aws\Ses\Exception\SesException $error) {
+                    return [
+                        "status" => "error",
+                        "error" => $error->getAwsErrorMessage()
+                    ];
+                }
+
+
+            }
+            
+            
         }
 
     }
