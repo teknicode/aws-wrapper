@@ -52,13 +52,14 @@ array("status"=>"failed","error"=>"{ERROR MESSAGE}")
 Send Email:
 
 ```php
-$sms = $wrapper->email("email address","subject","html");
+$sms = $wrapper->email("email address","subject","html",[attachments]);
 
 returns
 array("status"=>"success","message_id"=>"{MESSAGE ID}")
 or
 array("status"=>"failed","error"=>"{ERROR MESSAGE}")
 ```
+Attachments should be provided as an array of references.
 
 #### License
 
