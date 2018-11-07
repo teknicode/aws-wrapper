@@ -100,7 +100,7 @@ class Aws{
                     "error" => $e->getAwsErrorMessage()
                 ];
             }
-            
+
         }else{
 
             $this->mailer->setFrom($this->credentials['email_from']);
@@ -110,7 +110,11 @@ class Aws{
             $this->mailer->AltBody = strip_tags($html);
             if( !empty($attachments) && count($attachments) > 0 ) {
                 foreach($attachments as $attachment){
+                  if( !is_array($attachment) ){
                     $this->mailer->addAttachment($attachment);
+                  }else{
+                    $this->mailer->addStringAttachment($attachment['content'],$attachment['name']);
+                  }
                 }
             }
 
@@ -141,8 +145,8 @@ class Aws{
 
 
             }
-            
-            
+
+
         }
 
     }
